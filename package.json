@@ -1,0 +1,28 @@
+{
+  "name": "pastebincrawler",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@types/cheerio": "^0.22.11",
+    "@types/fs-extra": "^5.0.5",
+    "@types/node": "^12.0.0",
+    "@types/request-promise": "^4.1.43",
+    "@types/winston": "^2.4.4",
+    "ts-node": "^8.1.0",
+    "typescript": "^3.4.5"
+  },
+  "dependencies": {
+    "cheerio": "^1.0.0-rc.3",
+    "fs-extra": "^7.0.1",
+    "request": "^2.88.0",
+    "request-promise": "^4.2.4",
+    "winston": "^3.2.1"
+  }
+}
