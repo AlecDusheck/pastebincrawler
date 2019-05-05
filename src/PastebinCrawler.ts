@@ -44,14 +44,6 @@ export class PastebinCrawler {
         this._logger = value;
     }
 
-    get querySite(): () => Promise<any> {
-        return this._querySite;
-    }
-
-    set querySite(value: () => Promise<any>) {
-        this._querySite = value;
-    }
-
     private static _instance: PastebinCrawler;
 
     private _keywords: Array<string>;
@@ -126,20 +118,21 @@ export class PastebinCrawler {
         await Promise.all(newList.map(async (newItem) => {
             if (!this._lastPastelist.includes(newItem)){
                 await this.getPaste(newItem);
-                await this._delay(this.deviate(5000)); // Delay so we aren't sus
+                await this._delay(this._deviate(5 * 1000)); // Delay so we aren't sus
             }
         }));
 
         this._lastPastelist = newList;
 
         // Randomly rest so we don't get banned
-        if (Math.random() < .3){
+        if (Math.random() < .2){
             this.logger.info("Sleeping to prevent ban...");
-            await this._delay(120000);
+            await this._delay(300 * 1000);
             this.logger.info("Sleeping done");
+        } else {
+            await this._delay(this._deviate(45 * 1000)); // We don't need to check the list every 10 ms lol
         }
 
-        await this._delay(this.deviate(45000)); // We don't need to check the list every 10 ms lol
         this._querySite();
     };
 
@@ -151,7 +144,7 @@ export class PastebinCrawler {
         });
     };
 
-    private deviate = (x: number): number => {
+    private _deviate = (x: number): number => {
         const min = x * .1;
         const max = x * .3;
 
