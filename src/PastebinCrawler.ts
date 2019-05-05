@@ -126,12 +126,12 @@ export class PastebinCrawler {
         await Promise.all(newList.map(async (newItem) => {
             if (!this._lastPastelist.includes(newItem)){
                 await this.getPaste(newItem);
-                await this._delay(this.deviate(2000)); // Delay so we aren't sus
+                await this._delay(this.deviate(5000)); // Delay so we aren't sus
             }
         }));
 
         this._lastPastelist = newList;
-        await this._delay(this.deviate(25000)); // We don't need to check the list every 10 ms lol
+        await this._delay(this.deviate(45000)); // We don't need to check the list every 10 ms lol
 
         this._querySite();
     };
@@ -146,11 +146,11 @@ export class PastebinCrawler {
 
     private deviate = (x: number): number => {
         const min = x * .1;
-        const max = x * .2;
+        const max = x * .3;
 
         const mod = Math.random() * (+max - +min) + +min;
 
-        if (Math.random() > .5) x -= mod;
+        if (Math.random() > .8) x -= mod;
         else x += mod;
 
         return x;
