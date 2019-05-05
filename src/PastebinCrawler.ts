@@ -108,7 +108,7 @@ export class PastebinCrawler {
         });
 
         if (save && trigger) {
-            this.logger.info("Found paste @ " + pasteUri);
+            this.logger.info("Found paste @ " + pasteUri + " because of trigger \"" + trigger + "\"");
             await fs.outputFile(this.savePath + Date.now() + "-" + trigger + ".txt", content);
         }
     };
