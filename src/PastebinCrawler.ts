@@ -131,8 +131,15 @@ export class PastebinCrawler {
         }));
 
         this._lastPastelist = newList;
-        await this._delay(this.deviate(45000)); // We don't need to check the list every 10 ms lol
 
+        // Randomly rest so we don't get banned
+        if (Math.random() < .3){
+            this.logger.info("Sleeping to prevent ban...");
+            await this._delay(120000);
+            this.logger.info("Sleeping done");
+        }
+
+        await this._delay(this.deviate(45000)); // We don't need to check the list every 10 ms lol
         this._querySite();
     };
 
