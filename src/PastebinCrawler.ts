@@ -11,14 +11,6 @@ export class PastebinCrawler {
     private readonly _savePath: string;
     private readonly _logger: winston.Logger;
 
-    static get instance(): PastebinCrawler {
-        return this._instance;
-    }
-
-    static set instance(value: PastebinCrawler) {
-        this._instance = value;
-    }
-
     get lastPastelist(): Array<any> {
         return this._lastPastelist;
     }
@@ -45,7 +37,7 @@ export class PastebinCrawler {
 
     private _lastPastelist: Array<any>;
 
-    constructor(keywords: Array<string>, logPath: string, savePath: string, postReadDelay: number, sleepEnabled: boolean, refreshDelay: number){
+    constructor(keywords: Array<string>, logPath: string, savePath: string, postReadDelay: number, sleepEnabled: boolean, refreshDelay: number) {
         this._keywords = keywords;
         this._logPath = logPath;
         this._savePath = savePath;
@@ -62,8 +54,8 @@ export class PastebinCrawler {
             level: 'info',
             format: winston.format.json(),
             transports: [
-                new winston.transports.Console({ level: 'info' }),
-                new winston.transports.File({ filename: logPath, level: "info" })
+                new winston.transports.Console({level: 'info'}),
+                new winston.transports.File({filename: logPath, level: "info"})
             ]
         });
 
@@ -77,11 +69,10 @@ export class PastebinCrawler {
         let content = "";
 
         const $ = cheerio.load(await request("https://pastebin.com" + pasteUri));
-        $(".text").children().each((i, elm) => {
-            // console.log(elm.firstChild);
-            if (elm.firstChild.children){
+        $(".text").children().each((_, elm) => { // Pastebin displays the content in a div with a list of li's that represents a line
+            if (elm.firstChild.children) {
                 elm.firstChild.children.forEach(child => {
-                    content = content + child.data + "\n";
+                    content = content + child.data + "\n"; // Get the data and add it to content
                 })
             }
         });
@@ -89,13 +80,13 @@ export class PastebinCrawler {
         let save = false;
         let trigger;
         this.keywords.forEach(keyword => {
-            if (content.toLowerCase().includes(keyword.toLowerCase())) {
+            if (content.toLowerCase().includes(keyword.toLowerCase())) { // Check if the paste contains a keyword
                 save = true;
                 trigger = keyword;
             }
         });
 
-        if (save && trigger) {
+        if (save && trigger) { // If we need to, save the paste content
             this.logger.info("Found paste @ " + pasteUri + " because of trigger \"" + trigger + "\"");
             await fs.outputFile(this.savePath + trigger + "/" + Date.now() + ".txt", content);
         }
@@ -112,16 +103,16 @@ export class PastebinCrawler {
 
         // Get different elements
         await Promise.all(newList.map(async (newItem) => {
-            if (!this._lastPastelist.includes(newItem)){
+            if (!this.lastPastelist.includes(newItem)) {
                 await this._getPaste(newItem);
                 await this._delay(this._deviate(this.postReadDelay)); // Delay so we aren't sus
             }
         }));
 
-        this._lastPastelist = newList;
+        this.lastPastelist = newList;
 
         // Randomly rest so we don't get banned
-        if (Math.random() < .2 && this.sleepEnabled){
+        if (Math.random() < .2 && this.sleepEnabled) {
             this.logger.info("Sleeping to prevent ban...");
             await this._delay(300 * 1000);
             this.logger.info("Sleeping done");
