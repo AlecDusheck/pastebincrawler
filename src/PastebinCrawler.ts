@@ -99,13 +99,17 @@ export class PastebinCrawler {
         });
 
         let save = false;
+        let trigger;
         this.keywords.forEach(keyword => {
-            if (content.toLowerCase().includes(keyword.toLowerCase())) save = true;
+            if (content.toLowerCase().includes(keyword.toLowerCase())) {
+                save = true;
+                trigger = keyword;
+            }
         });
 
-        if (save) {
+        if (save && trigger) {
             this.logger.info("Found paste @ " + pasteUri);
-            await fs.outputFile(this.savePath + Date.now() + ".txt", content);
+            await fs.outputFile(this.savePath + Date.now() + "-" + trigger + ".txt", content);
         }
     };
 
