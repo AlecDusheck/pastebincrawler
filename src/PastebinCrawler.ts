@@ -4,6 +4,13 @@ import * as cheerio from "cheerio";
 import * as fs from "fs-extra";
 
 export class PastebinCrawler {
+    private static _instance: PastebinCrawler;
+
+    private readonly _keywords: Array<string>;
+    private readonly _logPath: string;
+    private readonly _savePath: string;
+    private readonly _logger: winston.Logger;
+
     static get instance(): PastebinCrawler {
         return this._instance;
     }
@@ -12,57 +19,46 @@ export class PastebinCrawler {
         this._instance = value;
     }
 
-    get keywords(): Array<string> {
-        return this._keywords;
+    get lastPastelist(): Array<any> {
+        return this._lastPastelist;
     }
 
-    set keywords(value: Array<string>) {
-        this._keywords = value;
-    }
-
-    get logPath(): string {
-        return this._logPath;
-    }
-
-    set logPath(value: string) {
-        this._logPath = value;
-    }
-
-    get savePath(): string {
-        return this._savePath;
-    }
-
-    set savePath(value: string) {
-        this._savePath = value;
+    set lastPastelist(value: Array<any>) {
+        this._lastPastelist = value;
     }
 
     get logger(): winston.Logger {
         return this._logger;
     }
 
-    set logger(value: winston.Logger) {
-        this._logger = value;
+    get savePath(): string {
+        return this._savePath;
     }
 
-    private static _instance: PastebinCrawler;
+    get keywords(): Array<string> {
+        return this._keywords;
+    }
 
-    private _keywords: Array<string>;
-    private _logPath: string;
-    private _savePath: string;
-    private _logger: winston.Logger;
+    private readonly postReadDelay: number;
+    private readonly sleepEnabled: boolean;
+    private readonly refreshDelay: number;
 
     private _lastPastelist: Array<any>;
 
-    constructor(keywords: Array<string>, logPath: string, savePath: string){
+    constructor(keywords: Array<string>, logPath: string, savePath: string, postReadDelay: number, sleepEnabled: boolean, refreshDelay: number){
         this._keywords = keywords;
         this._logPath = logPath;
-        this.savePath = savePath;
+        this._savePath = savePath;
+
+        this.postReadDelay = postReadDelay;
+        this.sleepEnabled = sleepEnabled;
+        this.refreshDelay = refreshDelay;
 
         PastebinCrawler._instance = this;
 
         this._lastPastelist = new Array<string>();
 
-        this.logger = winston.createLogger({
+        this._logger = winston.createLogger({
             level: 'info',
             format: winston.format.json(),
             transports: [
@@ -77,7 +73,7 @@ export class PastebinCrawler {
         this._querySite();
     };
 
-    private getPaste = async (pasteUri: string) => {
+    private _getPaste = async (pasteUri: string) => {
         let content = "";
 
         const $ = cheerio.load(await request("https://pastebin.com" + pasteUri));
@@ -101,7 +97,7 @@ export class PastebinCrawler {
 
         if (save && trigger) {
             this.logger.info("Found paste @ " + pasteUri + " because of trigger \"" + trigger + "\"");
-            await fs.outputFile(this.savePath + Date.now() + "-" + trigger + ".txt", content);
+            await fs.outputFile(this.savePath + trigger + "/" + Date.now() + ".txt", content);
         }
     };
 
@@ -117,20 +113,20 @@ export class PastebinCrawler {
         // Get different elements
         await Promise.all(newList.map(async (newItem) => {
             if (!this._lastPastelist.includes(newItem)){
-                await this.getPaste(newItem);
-                await this._delay(this._deviate(5 * 1000)); // Delay so we aren't sus
+                await this._getPaste(newItem);
+                await this._delay(this._deviate(this.postReadDelay)); // Delay so we aren't sus
             }
         }));
 
         this._lastPastelist = newList;
 
         // Randomly rest so we don't get banned
-        if (Math.random() < .2){
+        if (Math.random() < .2 && this.sleepEnabled){
             this.logger.info("Sleeping to prevent ban...");
             await this._delay(300 * 1000);
             this.logger.info("Sleeping done");
         } else {
-            await this._delay(this._deviate(45 * 1000)); // We don't need to check the list every 10 ms lol
+            await this._delay(this._deviate(this.refreshDelay)); // We don't need to check the list every 10 ms lol
         }
 
         this._querySite();
