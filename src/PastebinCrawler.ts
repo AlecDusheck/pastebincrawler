@@ -74,14 +74,14 @@ export class PastebinCrawler {
             level: 'info',
             format: winston.format.json(),
             transports: [
-                new winston.transports.File({ filename: logPath })
+                new winston.transports.Console({ level: 'info' }),
+                new winston.transports.File({ filename: logPath, level: "info" })
             ]
         });
 
     }
 
     public bootstrap = async () => {
-        this.logger.log("Info", "Online");
         this._querySite();
     };
 
@@ -104,14 +104,12 @@ export class PastebinCrawler {
         });
 
         if (save) {
-            this.logger.log("Save", "Found paste @ " + pasteUri);
+            this.logger.info("Found paste @ " + pasteUri);
             await fs.outputFile(this.savePath + Date.now() + ".txt", content);
         }
     };
 
     private _querySite = async () => {
-        this.logger.log("Heartbeat", "Beat...");
-
         // Get new list contents
         const newList = [];
         const $ = cheerio.load(await request("https://pastebin.com")); // Get the contents of pastebin
